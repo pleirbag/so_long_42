@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   teste_wind.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: gabpicci <gabpicci@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/03/04 20:12:42 by gabpicci          #+#    #+#             */
+/*   Updated: 2024/03/07 00:03:15 by gabpicci         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "so_long.h"
 
 int keyhandler(int keypress, t_mlxd mlxd)
@@ -14,14 +26,18 @@ int	destroy_window(t_mlxd mlxd)
 	mlx_destroy_window(mlxd.mlx_ptr, mlxd.window_ptr);
 	mlx_destroy_display(mlxd.mlx_ptr);
 	free(mlxd.mlx_ptr);
-	exit(0);
 	return (0);
 }
 
-int main ()
+int main (int ac, char **av)
 {
 	t_mlxd	mlxd;
+	t_map	map;
+	int		fd = ac;
 
+	if (ac != 2)
+		error_func(0);
+	map = map_into_matrix(av);
 	mlxd.mlx_ptr = mlx_init();
 	if (!mlxd.mlx_ptr)
 		return (1);
@@ -29,12 +45,16 @@ int main ()
 	if (!mlxd.window_ptr)
 	{
 		free(mlxd.window_ptr);
-		return (-1);
+		return (-1); 
 	}
+	fd = open(av[1], O_RDONLY);
 	mlx_key_hook(mlxd.window_ptr, &keyhandler, &mlxd);
 	mlx_hook(mlxd.window_ptr, DestroyNotify, StructureNotifyMask, &destroy_window, &mlxd);
 	mlx_loop(mlxd.mlx_ptr);
+	mlx_destroy_window(mlxd.mlx_ptr, mlxd.window_ptr);
+	mlx_loop_end(mlxd.mlx_ptr);
 	free(mlxd.mlx_ptr);
+	close(fd);
 	return (0);
 }
 /* Clients select event reporting of most events relative to a window. 

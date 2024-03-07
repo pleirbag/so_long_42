@@ -6,7 +6,7 @@
 #    By: gabpicci <gabpicci@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/03 21:19:03 by gabpicci          #+#    #+#              #
-#    Updated: 2024/03/03 21:37:53 by gabpicci         ###   ########.fr        #
+#    Updated: 2024/03/06 23:50:10 by gabpicci         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,9 +14,11 @@ NAME = so_long
 
 LIBFT = libft.a
 
+NXT = nxt.a
+
 #PRINTF = libftprintf.a
 
-LIBMLX = ./minilibx-linux/libmlx_Linux.a ./minilibx-linux/libmlx.a
+LIBMLX = ./.minilibx-linux/libmlx_Linux.a ./.minilibx-linux/libmlx.a
 
 CC = cc
 
@@ -28,7 +30,7 @@ RM = rm -f
 
 AR = ar -rsc
 
-SRC = teste_wind.c 
+SRC = teste_wind.c map_check.c utils.c maze_solver.c error.c
 
 OBJ = $(SRC:.c=.o)
 
@@ -40,15 +42,15 @@ all: $(NAME)
 
 $(NAME): $(OBJ)
 	@make -C ./libft 
-	@make -C ./minilibx-linux
+	@make -C ./.minilibx-linux
 	@mv ./libft/$(LIBFT) . 
-	$(CC) $(OBJ) -Lminilibx-linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz -o $(NAME) libft.a 
+	$(CC) $(OBJ) -L.minilibx-linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz -o $(NAME) libft.a 
 
 clean:
 	$(RM) $(OBJ)
 	@make clean -C ./libft
 
-	@make clean -C ./minilibx-linux
+	@make clean -C ./.minilibx-linux
 
 
 fclean: clean
