@@ -6,7 +6,7 @@
 /*   By: gabpicci <gabpicci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/03 19:47:50 by gabpicci          #+#    #+#             */
-/*   Updated: 2024/03/06 23:45:47 by gabpicci         ###   ########.fr       */
+/*   Updated: 2024/03/20 15:34:11 by gabpicci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,17 +19,17 @@ int	valid_char(char c, t_map *map, int x, int y)
 		return (1);
 	else if (c == 'C')
 	{
-		(*map).coll++;
+		(*map).coll_nbr++;
 		return (1);
 	}
 	else if (c == 'E')
 	{
-		(*map).exit++;
+		(*map).exit_nbr++;
 		return (1);
 	}
 	else if (c == 'P')
 	{
-		(*map).plyr++;
+		(*map).plyr_nbr++;
 		(*map).y_start = y;
 		(*map).x_start = x;
 		return (1);
@@ -83,6 +83,8 @@ int	dimentions(char **av, t_map *map)
 	width = 0;
 	fd = open(av[1], O_RDONLY);
 	temp = get_next_line(fd);
+	if (!temp)
+		error_func(1);
 	while (temp[width + 1])
 		width++;
 	while (temp && temp[0] != '\n')
@@ -106,9 +108,9 @@ int	check_map(t_map *map)
 
 	i = 0;
 	cmp = 0;
-	(*map).exit = 0;
-	(*map).coll = 0;
-	(*map).plyr = 0;
+	(*map).exit_nbr = 0;
+	(*map).coll_nbr = 0;
+	(*map).plyr_nbr = 0;
 	while (i < (*map).height)
 	{
 		cmp = 0;
@@ -122,9 +124,10 @@ int	check_map(t_map *map)
 			free_error(map->mtrx, 4);
 		i++;
 	}
+	printf("%d\n%d\n", (*map).y_start, (*map).x_start);
 	if (walls(*map) < 0)
 		free_error(map->mtrx, 4);
-	if ((*map).exit != 1 || (*map).coll < 1 || (*map).plyr != 1)
+	if ((*map).exit_nbr != 1 || (*map).coll_nbr < 1 || (*map).plyr_nbr != 1)
 		free_error(map->mtrx, 7);
 	test_maze(*map);
 	return (0);
@@ -170,8 +173,7 @@ t_map map_into_matrix(char **av)
 	}
 	matrixx[i] = NULL;
 	map.mtrx = matrixx;
-	// check_map(&map);
-	free_matrix(map.mtrx);
+	check_map(&map);
 	return (map);
 }
 

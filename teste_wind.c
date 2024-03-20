@@ -6,26 +6,72 @@
 /*   By: gabpicci <gabpicci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/04 20:12:42 by gabpicci          #+#    #+#             */
-/*   Updated: 2024/03/07 00:03:15 by gabpicci         ###   ########.fr       */
+/*   Updated: 2024/03/20 15:38:37 by gabpicci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "so_long.h"
 
-int keyhandler(int keypress, t_mlxd mlxd)
+int key_endr(int keypress, t_mlxd *mlxd)
 {
-	(void)mlxd;
 	if (keypress == 65307)
-		exit(0);
-	printf("Pressed key: %d\n", keypress);
+		close_everything(mlxd);
+	printf("endr: %d\n", keypress);
 	return (0);
 }
 
-int	destroy_window(t_mlxd mlxd)
+void	img_loader(t_mlxd *mlxd)
 {
-	mlx_destroy_window(mlxd.mlx_ptr, mlxd.window_ptr);
-	mlx_destroy_display(mlxd.mlx_ptr);
-	free(mlxd.mlx_ptr);
+	int	i;
+
+	i = 64;
+	(*mlxd).plyr = mlx_xpm_file_to_image((*mlxd).mlx_ptr, "./texture/player.xpm", &i, &i);
+	(*mlxd).wall = mlx_xpm_file_to_image((*mlxd).mlx_ptr, "./texture/wall.xpm", &i, &i);
+	(*mlxd).coll = mlx_xpm_file_to_image((*mlxd).mlx_ptr, "./texture/coll.xpm", &i, &i);
+	(*mlxd).exit = mlx_xpm_file_to_image((*mlxd).mlx_ptr, "./texture/exit.xpm", &i, &i);
+	(*mlxd).mpty = mlx_xpm_file_to_image((*mlxd).mlx_ptr, "./texture/empty.xpm", &i, &i);
+}
+
+void	draw_image(int x, int y, t_map map, t_mlxd mlxd)
+{
+	if (map.mtrx[y][x] == 'C')
+		mlx_put_image_to_window(mlxd.mlx_ptr, mlxd.window_ptr, mlxd.coll, (x * 64), (y * 64));
+	if (map.mtrx[y][x] == 'E')
+		mlx_put_image_to_window(mlxd.mlx_ptr, mlxd.window_ptr, mlxd.exit, (x * 64), (y * 64));
+	if (map.mtrx[y][x] == '1')
+		mlx_put_image_to_window(mlxd.mlx_ptr, mlxd.window_ptr, mlxd.wall, (x * 64), (y * 64));
+	if (map.mtrx[y][x] == '0' || map.mtrx[y][x] == 'P')
+		mlx_put_image_to_window(mlxd.mlx_ptr, mlxd.window_ptr, mlxd.mpty, (x * 64), (y * 64));	
+}
+
+void	render_screen(t_map map, t_mlxd mlxd)
+{
+	int	x;
+	int	y;
+
+	y = -1;
+	while (map.mtrx[++y] != NULL)
+	{
+		x = -1;
+		while (map.mtrx[y][++x] != '\0')
+			draw_image(x, y, map, mlxd);
+	}
+	printf("%d\n%d\n", map.x_start, map.y_start);
+	mlx_put_image_to_window(mlxd.mlx_ptr, mlxd.window_ptr, mlxd.plyr, (map.x_start * 64), (map.y_start * 64));
+}
+
+int	close_everything(t_mlxd *mlxd)
+{
+	mlx_destroy_image((*mlxd).mlx_ptr, (*mlxd).plyr);
+	mlx_destroy_image((*mlxd).mlx_ptr, (*mlxd).coll);
+	mlx_destroy_image((*mlxd).mlx_ptr, (*mlxd).wall);
+	mlx_destroy_image((*mlxd).mlx_ptr, (*mlxd).mpty);
+	mlx_destroy_image((*mlxd).mlx_ptr, (*mlxd).exit);
+	mlx_destroy_window((*mlxd).mlx_ptr, (*mlxd).window_ptr);
+	mlx_destroy_display((*mlxd).mlx_ptr);
+	mlx_loop_end((*mlxd).mlx_ptr);
+	free((*mlxd).mlx_ptr);
+	exit(0);
 	return (0);
 }
 
@@ -33,7 +79,6 @@ int main (int ac, char **av)
 {
 	t_mlxd	mlxd;
 	t_map	map;
-	int		fd = ac;
 
 	if (ac != 2)
 		error_func(0);
@@ -41,20 +86,20 @@ int main (int ac, char **av)
 	mlxd.mlx_ptr = mlx_init();
 	if (!mlxd.mlx_ptr)
 		return (1);
-	mlxd.window_ptr = mlx_new_window(mlxd.mlx_ptr, 600, 600, "owo");
+	mlxd.window_ptr = mlx_new_window(mlxd.mlx_ptr, (map.width * 64), (map.height * 64), "owo");
 	if (!mlxd.window_ptr)
 	{
 		free(mlxd.window_ptr);
 		return (-1); 
 	}
-	fd = open(av[1], O_RDONLY);
-	mlx_key_hook(mlxd.window_ptr, &keyhandler, &mlxd);
-	mlx_hook(mlxd.window_ptr, DestroyNotify, StructureNotifyMask, &destroy_window, &mlxd);
+	printf("coll :: %d\n", map.coll_nbr);
+	img_loader(&mlxd);
+	render_screen(map, mlxd);
+	mlx_key_hook(mlxd.window_ptr, &keyhandler, &map);
+	mlx_hook(mlxd.window_ptr, KeyPress, KeyPressMask, &key_endr, &mlxd);
+	mlx_hook(mlxd.window_ptr, DestroyNotify, KeyPressMask, &close_everything, &mlxd);
 	mlx_loop(mlxd.mlx_ptr);
-	mlx_destroy_window(mlxd.mlx_ptr, mlxd.window_ptr);
-	mlx_loop_end(mlxd.mlx_ptr);
-	free(mlxd.mlx_ptr);
-	close(fd);
+	free_matrix(map.mtrx);
 	return (0);
 }
 /* Clients select event reporting of most events relative to a window. 
